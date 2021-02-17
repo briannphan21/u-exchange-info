@@ -27,14 +27,9 @@ import { useEffect } from 'react'
 import Warning from '../components/Warning'
 import { usePathDismissed, useSavedTokens } from '../contexts/LocalStorage'
 import { Hover, PageWrapper, ContentWrapper, StyledIcon } from '../components'
-import { PlusCircle, Bookmark, AlertCircle } from 'react-feather'
+import { PlusCircle, Bookmark } from 'react-feather'
 import FormattedName from '../components/FormattedName'
 import { useListedTokens } from '../contexts/Application'
-import HoverText from '../components/HoverText'
-import { UNTRACKED_COPY, TOKEN_BLACKLIST, BLOCKED_WARNINGS } from '../constants'
-import QuestionHelper from '../components/QuestionHelper'
-import Checkbox from '../components/Checkbox'
-import { shortenAddress } from '../utils'
 
 const DashboardWrapper = styled.div`
   width: 100%;
@@ -88,13 +83,6 @@ const TokenDetailsLayout = styled.div`
   }
 `
 
-const WarningIcon = styled(AlertCircle)`
-  stroke: ${({ theme }) => theme.text1};
-  height: 16px;
-  width: 16px;
-  opacity: 0.6;
-`
-
 const WarningGrouping = styled.div`
   opacity: ${({ disabled }) => disabled && '0.4'};
   pointer-events: ${({ disabled }) => disabled && 'none'};
@@ -137,13 +125,23 @@ function TokenPage({ address, history }) {
   const priceChange = priceChangeUSD ? formattedPercent(priceChangeUSD) : ''
 
   // volume
-  const volume = formattedNum(!!oneDayVolumeUSD ? oneDayVolumeUSD : oneDayVolumeUT, true)
+    const volume =
+    oneDayVolumeUSD || oneDayVolumeUSD === 0
+      ? formattedNum(oneDayVolumeUSD === 0 ? oneDayVolumeUT : oneDayVolumeUSD, true)
+      : oneDayVolumeUSD === 0
+      ? '$0'
+      : '-'
 
-  const usingUtVolume = oneDayVolumeUSD === 0 && !!oneDayVolumeUT
+  // mark if using untracked volume
+  const [usingUtVolume, setUsingUtVolume] = useState(false)
+  useEffect(() => {
+    setUsingUtVolume(oneDayVolumeUSD === 0 ? true : false)
+  }, [oneDayVolumeUSD])
+
   const volumeChange = formattedPercent(!usingUtVolume ? volumeChangeUSD : volumeChangeUT)
 
   // liquidity
-  const liquidity = formattedNum(totalLiquidityUSD, true)
+  const liquidity = totalLiquidityUSD ? formattedNum(totalLiquidityUSD, true) : totalLiquidityUSD === 0 ? '$0' : '-'
   const liquidityChange = formattedPercent(liquidityChangeUSD)
 
   // transactions
@@ -169,43 +167,7 @@ function TokenPage({ address, history }) {
     })
   }, [])
 
-  const [useTracked, setUseTracked] = useState(true)
-
-  const BlockedWrapper = styled.div`
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  `
-
-  const BlockedMessageWrapper = styled.div`
-    border: 1px solid ${({ theme }) => theme.text3};
-    border-radius: 12px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 1rem;
-    max-width: 80%;
-  `
-
-  if (TOKEN_BLACKLIST.includes(address)) {
-    return (
-      <BlockedWrapper>
-        <BlockedMessageWrapper>
-          <AutoColumn gap="1rem" justify="center">
-            <TYPE.light style={{ textAlign: 'center' }}>
-              {BLOCKED_WARNINGS[address] ?? `This token is not supported.`}
-            </TYPE.light>
-            <Link external={true} href={'https://etherscan.io/address/' + address}>{`More about ${shortenAddress(
-              address
-            )}`}</Link>
-          </AutoColumn>
-        </BlockedMessageWrapper>
-      </BlockedWrapper>
-    )
-  }
-
+ 
   return (
     <PageWrapper>
       <ThemedBackground backgroundColor={transparentize(0.6, backgroundColor)} />
@@ -220,6 +182,7 @@ function TokenPage({ address, history }) {
           <AutoRow align="flex-end" style={{ width: 'fit-content' }}>
             <TYPE.body>
               <BasicLink to="/tokens">{'Tokens '}</BasicLink>→ {symbol}
+              {'  '}
             </TYPE.body>
             <Link
               style={{ width: 'fit-content' }}
@@ -290,18 +253,7 @@ function TokenPage({ address, history }) {
             </RowBetween>
 
             <>
-              {!below1080 && (
-                <RowFixed>
-                  <TYPE.main fontSize={'1.125rem'} mr="6px">
-                    Token Stats
-                  </TYPE.main>
-                  {usingUtVolume && (
-                    <HoverText text={UNTRACKED_COPY}>
-                      <WarningIcon />
-                    </HoverText>
-                  )}
-                </RowFixed>
-              )}
+              
               <PanelWrapper style={{ marginTop: below1080 ? '0' : '1rem' }}>
                 {below1080 && price && (
                   <Panel>
@@ -337,7 +289,7 @@ function TokenPage({ address, history }) {
                 <Panel>
                   <AutoColumn gap="20px">
                     <RowBetween>
-                      <TYPE.main>Volume (24hrs)</TYPE.main>
+                      <TYPE.main>Volume (24hrs) {usingUtVolume && '(Untracked)'}</TYPE.main>
                       <div />
                     </RowBetween>
                     <RowBetween align="flex-end">
@@ -357,7 +309,7 @@ function TokenPage({ address, history }) {
                     </RowBetween>
                     <RowBetween align="flex-end">
                       <TYPE.main fontSize={'1.5rem'} lineHeight={1} fontWeight={500}>
-                        {oneDayTxns ? localNumber(oneDayTxns) : 0}
+                        {oneDayTxns ? localNumber(oneDayTxns) : oneDayTxns === 0 ? 0 : '-'}
                       </TYPE.main>
                       <TYPE.main>{txnChangeFormatted}</TYPE.main>
                     </RowBetween>
@@ -374,17 +326,12 @@ function TokenPage({ address, history }) {
               </PanelWrapper>
             </>
 
-            <RowBetween style={{ marginTop: '3rem' }}>
-              <TYPE.main fontSize={'1.125rem'}>Top Pairs</TYPE.main>
-              <AutoRow gap="4px" style={{ width: 'fit-content' }}>
-                <Checkbox
-                  checked={useTracked}
-                  setChecked={() => setUseTracked(!useTracked)}
-                  text={'Hide unstable pairs'}
-                />
-                <QuestionHelper text="USD amounts may be inaccurate in low liquiidty pairs or pairs without ETH or stablecoins." />
-              </AutoRow>
-            </RowBetween>
+            <span>
+              <TYPE.main fontSize={'1.125rem'} style={{ marginTop: '3rem' }}>
+                Top Pairs
+              </TYPE.main>
+            </span>
+
             <Panel
               rounded
               style={{
@@ -393,7 +340,7 @@ function TokenPage({ address, history }) {
               }}
             >
               {address && fetchedPairsList ? (
-                <PairList color={backgroundColor} address={address} pairs={fetchedPairsList} useTracked={useTracked} />
+                <PairList color={backgroundColor} address={address} pairs={fetchedPairsList} />
               ) : (
                 <Loader />
               )}

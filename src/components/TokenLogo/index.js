@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import styled from 'styled-components'
 import { isAddress } from '../../utils/index.js'
+import PlaceHolder from '../../assets/placeholder.png'
 import EthereumLogo from '../../assets/eth.png'
 
 const BAD_IMAGES = {}
@@ -40,9 +41,7 @@ export default function TokenLogo({ address, header = false, size = '24px', ...r
   if (error || BAD_IMAGES[address]) {
     return (
       <Inline>
-        <span {...rest} alt={''} style={{ fontSize: size }} role="img" aria-label="face">
-          🤔
-        </span>
+        <Image {...rest} alt={''} src={PlaceHolder} size={size} />
       </Inline>
     )
   }

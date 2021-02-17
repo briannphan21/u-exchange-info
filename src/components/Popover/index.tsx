@@ -34,7 +34,7 @@ export interface PopoverProps {
 export default function Popover({ content, show, children, placement = 'auto' }: PopoverProps) {
   const [referenceElement, setReferenceElement] = useState<HTMLDivElement>(null)
   const [popperElement, setPopperElement] = useState<HTMLDivElement>(null)
-  const [arrowElement] = useState<HTMLDivElement>(null)
+  const [arrowElement, setArrowElement] = useState<HTMLDivElement>(null)
   const { styles, update, attributes } = usePopper(referenceElement, popperElement, {
     placement,
     strategy: 'fixed',
@@ -52,12 +52,12 @@ export default function Popover({ content, show, children, placement = 'auto' }:
       <Portal>
         <PopoverContainer show={show} ref={setPopperElement} style={styles.popper} {...attributes.popper}>
           {content}
-          {/* <Arrow
+          <Arrow
             className={`arrow-${attributes.popper?.['data-popper-placement'] ?? ''}`}
             ref={setArrowElement}
             style={styles.arrow}
             {...attributes.arrow}
-          /> */}
+          />
         </PopoverContainer>
       </Portal>
     </>

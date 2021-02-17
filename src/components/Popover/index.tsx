@@ -23,6 +23,49 @@ const PopoverContainer = styled.div<{ show: boolean }>`
 const ReferenceElement = styled.div`
   display: inline-block;
 `
+const Arrow = styled.div`
+  width: 8px;
+  height: 8px;
+  z-index: 9998;
+  ::before {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    z-index: 9998;
+    content: '';
+    border: 1px solid ${({ theme }) => theme.bg3};
+    transform: rotate(45deg);
+    background: ${({ theme }) => theme.bg2};
+  }
+  &.arrow-top {
+    bottom: -5px;
+    ::before {
+      border-top: none;
+      border-left: none;
+    }
+  }
+  &.arrow-bottom {
+    top: -5px;
+    ::before {
+      border-bottom: none;
+      border-right: none;
+    }
+  }
+  &.arrow-left {
+    right: -5px;
+    ::before {
+      border-bottom: none;
+      border-left: none;
+    }
+  }
+  &.arrow-right {
+    left: -5px;
+    ::before {
+      border-right: none;
+      border-top: none;
+    }
+  }
+`
 
 export interface PopoverProps {
   content: React.ReactNode

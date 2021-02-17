@@ -48,7 +48,7 @@ const DashGrid = styled.div`
   grid-template-areas: 'name liq vol';
   padding: 0 1.125rem;
 
-  opacity: ${({ fade }) => (fade ? '0.6' : '1')};
+  
 
   > * {
     justify-content: flex-end;
